@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin | MS Inspection Entry</title>
+  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="admin-page">
+  <div id="loginView" class="login-shell">
+    <main class="login-panel">
+      <a class="brand mb-4 d-inline-flex" href="/">MS <span>Inspection Entry</span></a>
+      <p class="section-label">Akses administrator</p>
+      <h1>Masuk ke pengelolaan</h1>
+      <p class="text-secondary">Kelola level inspection dan tinjau seluruh riwayat scan.</p>
+      <form id="loginForm" class="mt-4" novalidate>
+        <div class="mb-3"><label class="form-label" for="username">Username</label><input class="form-control form-control-lg" id="username" autocomplete="username" required></div>
+        <div class="mb-3"><label class="form-label" for="password">Password</label><input class="form-control form-control-lg" id="password" type="password" autocomplete="current-password" required></div>
+        <p id="loginError" class="alert alert-danger py-2" role="alert" hidden></p>
+        <button class="btn btn-primary btn-lg w-100" type="submit">Masuk</button>
+      </form>
+    </main>
+  </div>
+
+  <div id="dashboardView" hidden>
+    <nav class="navbar navbar-expand-lg admin-nav">
+      <div class="container-fluid px-lg-4">
+        <a class="brand" href="/">MS <span>Inspection Entry</span></a>
+        <div class="d-flex align-items-center gap-3">
+          <span id="adminName" class="small text-secondary"></span>
+          <button id="logoutButton" class="btn btn-outline-secondary btn-sm" type="button">Keluar</button>
+        </div>
+      </div>
+    </nav>
+    <main class="container-fluid px-lg-4 py-4 admin-main">
+      <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div><p class="section-label mb-2">Hari operasional <span id="businessDate">...</span></p><h1 class="h2 mb-0">Dashboard inspection</h1></div>
+        <a class="btn btn-dark" href="/">Buka scanner</a>
+      </div>
+
+      <section aria-labelledby="summaryTitle">
+        <h2 id="summaryTitle" class="visually-hidden">Ringkasan</h2>
+        <div class="metrics-grid mb-4">
+          <article><span>Total scan</span><strong id="metricTotal">0</strong></article>
+          <article><span>Green</span><strong id="metricGreen">0</strong></article>
+          <article><span>Red</span><strong id="metricRed">0</strong></article>
+          <article><span>Invalid atau ditolak</span><strong id="metricErrors">0</strong></article>
+        </div>
+      </section>
+
+      <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#logsPane" type="button">Log inspection</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#employeesPane" type="button">Level karyawan</button></li>
+      </ul>
+      <div class="tab-content">
+        <section id="logsPane" class="tab-pane fade show active" tabindex="0">
+          <form id="reportFilters" class="filter-grid mb-3">
+            <div><label class="form-label" for="startDate">Dari</label><input id="startDate" name="start_date" type="date" class="form-control"></div>
+            <div><label class="form-label" for="endDate">Sampai</label><input id="endDate" name="end_date" type="date" class="form-control"></div>
+            <div><label class="form-label" for="reportLevel">Level</label><select id="reportLevel" name="level" class="form-select"><option value="">Semua</option><option value="green">Green</option><option value="red">Red</option></select></div>
+            <div><label class="form-label" for="resultCode">Hasil</label><select id="resultCode" name="result_code" class="form-select"><option value="">Semua</option><option>GREEN</option><option>RED</option><option>EMPLOYEE_NOT_FOUND</option><option>EMPLOYEE_INACTIVE</option><option>INVALID_QR</option></select></div>
+            <div><label class="form-label" for="department">Departemen</label><select id="department" name="department" class="form-select"><option value="">Semua</option></select></div>
+            <div><label class="form-label" for="employeeFilter">Employee ID</label><input id="employeeFilter" name="employee_id" class="form-control" autocomplete="off"></div>
+            <div class="filter-actions"><button class="btn btn-primary" type="submit">Terapkan</button><button id="exportButton" class="btn btn-outline-secondary" type="button">Unduh Excel</button></div>
+          </form>
+          <div id="reportAlert" class="alert alert-danger" hidden></div>
+          <div class="table-responsive data-surface"><table class="table table-hover align-middle mb-0"><thead><tr><th>Waktu</th><th>Karyawan</th><th>Departemen</th><th>Level</th><th>Hasil</th><th>Sumber</th></tr></thead><tbody id="logsBody"></tbody></table><p id="logsEmpty" class="empty-state" hidden>Belum ada log untuk filter ini.</p></div>
+          <nav class="pager mt-3" aria-label="Pagination log"><button id="logsPrev" class="btn btn-outline-secondary btn-sm">Sebelumnya</button><span id="logsPage"></span><button id="logsNext" class="btn btn-outline-secondary btn-sm">Berikutnya</button></nav>
+        </section>
+
+        <section id="employeesPane" class="tab-pane fade" tabindex="0">
+          <form id="employeeFilters" class="d-flex flex-wrap gap-2 mb-3"><input id="employeeSearch" class="form-control search-control" placeholder="Cari ID, nama, atau departemen"><select id="employeeLevel" class="form-select level-control"><option value="">Semua level</option><option value="green">Green</option><option value="red">Red</option></select><button class="btn btn-primary">Cari</button></form>
+          <div id="employeeAlert" class="alert alert-danger" hidden></div>
+          <div class="table-responsive data-surface"><table class="table table-hover align-middle mb-0"><thead><tr><th>Employee ID</th><th>Nama</th><th>Departemen</th><th>Status</th><th>Level inspection</th></tr></thead><tbody id="employeesBody"></tbody></table><p id="employeesEmpty" class="empty-state" hidden>Tidak ada karyawan yang cocok.</p></div>
+          <nav class="pager mt-3" aria-label="Pagination karyawan"><button id="employeesPrev" class="btn btn-outline-secondary btn-sm">Sebelumnya</button><span id="employeesPage"></span><button id="employeesNext" class="btn btn-outline-secondary btn-sm">Berikutnya</button></nav>
+        </section>
+      </div>
+    </main>
+  </div>
+  <div id="toast" class="app-toast" role="status" hidden></div>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/admin.js" defer></script>
+</body>
+</html>
