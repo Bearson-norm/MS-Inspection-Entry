@@ -40,12 +40,12 @@ test('HTTP flow covers scan, authentication, level update, report, and Excel exp
   await request(app).get('/api/admin/reports/summary?start_date=2026-10-01&end_date=2026-10-08').expect(401);
 
   const agent=request.agent(app);
-  await agent.post('/api/auth/login').set('Origin',config.appOrigin).send({username:config.adminUsername,password:'test-password'}).expect(200).expect('set-cookie',/inspection_session=/);
+  await agent.post('/api/inspection/auth/login').set('Origin',config.appOrigin).send({username:config.adminUsername,password:'test-password'}).expect(200).expect('set-cookie',/inspection_session=/);
   const update=await agent.patch('/api/admin/employees/EMP100/level').set('Origin',config.appOrigin).send({level:'red'}).expect(200);
   assert.equal(update.body.data.level,'red');
   const summary=await agent.get('/api/admin/reports/summary?start_date=2026-10-01&end_date=2026-10-08').expect(200);
   assert.equal(summary.body.data.total,2);
   await agent.get('/api/admin/reports/export?start_date=2026-10-01&end_date=2026-10-08').expect(200).expect('Content-Type',/spreadsheetml/);
-  await agent.post('/api/auth/logout').set('Origin',config.appOrigin).expect(200);
-  await agent.get('/api/auth/session').expect(401);
+  await agent.post('/api/inspection/auth/logout').set('Origin',config.appOrigin).expect(200);
+  await agent.get('/api/inspection/auth/session').expect(401);
 });

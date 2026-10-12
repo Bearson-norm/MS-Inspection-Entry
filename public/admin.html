@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin | MS Inspection Entry</title>
-  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body class="admin-page">
   <div id="loginView" class="login-shell">
     <main class="login-panel">
-      <a class="brand mb-4 d-inline-flex" href="/">MS <span>Inspection Entry</span></a>
+      <a class="brand mb-4 d-inline-flex" href="./">MS <span>Inspection Entry</span></a>
       <p class="section-label">Akses administrator</p>
       <h1>Masuk ke pengelolaan</h1>
       <p class="text-secondary">Kelola level inspection dan tinjau seluruh riwayat scan.</p>
@@ -26,7 +26,7 @@
   <div id="dashboardView" hidden>
     <nav class="navbar navbar-expand-lg admin-nav">
       <div class="container-fluid px-lg-4">
-        <a class="brand" href="/">MS <span>Inspection Entry</span></a>
+        <a class="brand" href="./">MS <span>Inspection Entry</span></a>
         <div class="d-flex align-items-center gap-3">
           <span id="adminName" class="small text-secondary"></span>
           <button id="logoutButton" class="btn btn-outline-secondary btn-sm" type="button">Keluar</button>
@@ -36,7 +36,7 @@
     <main class="container-fluid px-lg-4 py-4 admin-main">
       <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
         <div><p class="section-label mb-2">Hari operasional <span id="businessDate">...</span></p><h1 class="h2 mb-0">Dashboard inspection</h1></div>
-        <a class="btn btn-dark" href="/">Buka scanner</a>
+        <a class="btn btn-dark" href="./">Buka scanner</a>
       </div>
 
       <section aria-labelledby="summaryTitle">
@@ -79,7 +79,7 @@
     </main>
   </div>
   <div id="toast" class="app-toast" role="status" hidden></div>
-  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="/admin.js" defer></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="admin.js" defer></script>
 </body>
 </html>

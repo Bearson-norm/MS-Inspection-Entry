@@ -8,10 +8,22 @@ function intEnv(name, fallback, min, max) {
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 
+function normalizeBasePath(raw) {
+  const trimmed = String(raw || '').trim();
+  if (!trimmed || trimmed === '/') return '';
+  let path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
+  return path;
+}
+
+const basePath = normalizeBasePath(process.env.BASE_PATH);
+
 module.exports = Object.freeze({
   port: intEnv('PORT', 3100, 1, 65535),
   host: process.env.HOST || '0.0.0.0',
   nodeEnv,
+  basePath,
+  cookiePath: basePath || '/',
   appOrigin: process.env.APP_ORIGIN || 'http://localhost:3100',
   timezone: process.env.TIMEZONE || 'Asia/Jakarta',
   resetHour: intEnv('BUSINESS_DAY_RESET_HOUR', 6, 0, 23),
@@ -21,7 +33,7 @@ module.exports = Object.freeze({
   secureCookies: nodeEnv === 'production',
   db: {
     host: process.env.DB_HOST || 'localhost',
-    port: intEnv('DB_PORT', 5432, 1, 65535),
+    port: intEnv('DB_PORT', 5433, 1, 65535),
     user: process.env.DB_USER || 'admin',
     password: process.env.DB_PASSWORD || 'admin123',
     database: process.env.DB_NAME || 'iot_qr_consumer',

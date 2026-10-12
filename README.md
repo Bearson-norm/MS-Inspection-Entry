@@ -2,6 +2,8 @@
 
 Web app mandiri untuk screening karyawan melalui QR. Master karyawan dan akun admin dibaca dari database PostgreSQL `IoT-QR-Consumer`; level inspection dan log disimpan pada tabel terpisah.
 
+Dapat di-deploy bersama CRS (`IoT-QR-Consumer`) di satu domain, misalnya `https://crs.moof-set.web.id/inspection/`, dengan Nginx mem-proxy ke proses Node terpisah.
+
 ## Fitur
 
 - Scanner kamera live dengan input manual sebagai fallback.
@@ -10,7 +12,7 @@ Web app mandiri untuk screening karyawan melalui QR. Master karyawan dan akun ad
 - Pencatatan semua percobaan dengan hari operasional berganti pukul 06:00 WIB.
 - Login admin memakai akun `users` yang sudah ada.
 - Pengaturan level green/red, laporan terfilter, pagination, dan ekspor Excel.
-- Health check database pada `GET /api/health`.
+- Health check database pada `GET /api/inspection/health`.
 
 ## Persyaratan
 
@@ -28,9 +30,18 @@ npm test
 npm start
 ```
 
-Buka scanner di `http://localhost:3100` dan admin di `http://localhost:3100/admin`.
+Dengan `BASE_PATH=/inspection` (default di `.env.example`):
 
-Sesuaikan kredensial database dan `APP_ORIGIN` di `.env`. Pada production, `APP_ORIGIN` harus sama persis dengan origin publik, misalnya `https://inspection.example.com`.
+- Scanner: `http://localhost:3100/inspection/`
+- Admin: `http://localhost:3100/inspection/admin`
+
+Untuk development tanpa prefix, kosongkan `BASE_PATH` di `.env` lalu buka `http://localhost:3100/` dan `/admin`.
+
+Sesuaikan kredensial database (`DB_PORT` default **5433**, selaras dengan CRS) dan `APP_ORIGIN`. Pada production di domain CRS, set:
+
+- `APP_ORIGIN=https://crs.moof-set.web.id`
+- `BASE_PATH=/inspection`
+- `NODE_ENV=production`
 
 ## Tabel Baru
 
@@ -43,18 +54,23 @@ Migrasi bersifat idempotent dan tidak mengubah tabel existing.
 ## API
 
 - `POST /api/scans` dengan body `{ "value": "EMP001", "source": "camera" }`.
-- `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/session`.
+- `POST /api/inspection/auth/login`, `POST /api/inspection/auth/logout`, `GET /api/inspection/auth/session`.
 - `GET /api/admin/employees` dan `PATCH /api/admin/employees/:employeeId/level`.
 - `GET /api/admin/reports/summary`, `/logs`, `/departments`, dan `/export`.
+- `GET /api/inspection/health` — health Inspection (CRS memakai `GET /api/health` sendiri).
 
-Endpoint `/api/admin/*` membutuhkan cookie session admin. Semua query laporan menerima `start_date`, `end_date`, `level`, `result_code`, `department`, dan `employee_id` sesuai kebutuhan.
+Endpoint `/api/admin/*` membutuhkan cookie session admin (`Path` mengikuti `BASE_PATH`, default `/inspection`). Auth Inspection sengaja di prefix `/api/inspection/auth` agar tidak bentrok dengan `POST /api/auth/login` CRS.
 
 ## Deployment
 
-1. Jalankan `npm install --omit=dev` dan `npm run migrate` pada server.
-2. Isi `.env` dengan `NODE_ENV=production`, origin HTTPS, dan kredensial database.
-3. Jalankan `pm2 start ecosystem.config.js`.
-4. Gunakan `nginx.conf.example` sebagai dasar reverse proxy dan pasang sertifikat TLS.
-5. Setelah deployment, verifikasi `/api/health`, login admin, kamera, satu scan green, satu scan red, dan ekspor Excel.
+1. Jalankan `npm install --omit=dev` dan `npm run migrate` pada server (PostgreSQL CRS harus sudah jalan).
+2. Isi `.env` production (origin HTTPS, `BASE_PATH`, DB).
+3. Jalankan `pm2 start ecosystem.config.js --env production` (port **3100**).
+4. CRS tetap di PM2 terpisah (port production CRS, mis. **5567**).
+5. Pasang Nginx gabungan: lihat [`nginx.crs-combined.conf.example`](nginx.crs-combined.conf.example). Standalone Inspection: [`nginx.conf.example`](nginx.conf.example).
+6. Verifikasi:
+   - `GET /api/health` → CRS
+   - `GET /api/inspection/health` → Inspection + DB
+   - UI `/inspection/`, admin, scan green/red, ekspor Excel
 
 Session cookie menggunakan `HttpOnly`, `SameSite=Strict`, dan `Secure` pada production. Operasi mutasi admin juga memeriksa header origin.

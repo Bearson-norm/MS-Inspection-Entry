@@ -14,7 +14,7 @@ function parseCookies(header = '') {
 
 function cookieOptions(maxAge) {
   const secure = config.secureCookies ? '; Secure' : '';
-  return `Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secure}`;
+  return `Path=${config.cookiePath}; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secure}`;
 }
 
 async function createSession(username) {

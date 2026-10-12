@@ -1,9 +1,28 @@
 const express = require('express');
 const path = require('path');
+const config = require('./config');
 const { pool } = require('./database');
 const scanRoutes = require('./routes/scans');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
+
+const publicDir = path.join(__dirname, 'public');
+const bootstrapDir = path.join(__dirname, 'node_modules', 'bootstrap', 'dist');
+
+function mountUi(app, mountPath) {
+  const prefix = mountPath || '';
+  const vendorPath = prefix ? `${prefix}/vendor/bootstrap` : '/vendor/bootstrap';
+  app.use(vendorPath, express.static(bootstrapDir));
+  if (prefix) {
+    app.use(prefix, express.static(publicDir));
+    app.get(prefix, (_req, res) => res.redirect(301, `${prefix}/`));
+    app.get(`${prefix}/`, (_req, res) => res.sendFile(path.join(publicDir, 'index.html')));
+    app.get(`${prefix}/admin`, (_req, res) => res.sendFile(path.join(publicDir, 'admin.html')));
+  } else {
+    app.use(express.static(publicDir));
+    app.get('/admin', (_req, res) => res.sendFile(path.join(publicDir, 'admin.html')));
+  }
+}
 
 function createApp() {
   const app = express();
@@ -16,16 +35,20 @@ function createApp() {
     res.setHeader('X-Frame-Options', 'DENY');
     next();
   });
-  app.use('/vendor/bootstrap', express.static(path.join(__dirname, 'node_modules', 'bootstrap', 'dist')));
-  app.use(express.static(path.join(__dirname, 'public')));
-  app.get('/api/health', async (_req, res) => {
-    try { await pool.query('SELECT 1'); res.json({ success: true, status: 'healthy', timestamp: new Date().toISOString() }); }
-    catch (_) { res.status(503).json({ success: false, status: 'unhealthy', timestamp: new Date().toISOString() }); }
+
+  mountUi(app, config.basePath);
+
+  app.get('/api/inspection/health', async (_req, res) => {
+    try {
+      await pool.query('SELECT 1');
+      res.json({ success: true, status: 'healthy', timestamp: new Date().toISOString() });
+    } catch (_) {
+      res.status(503).json({ success: false, status: 'unhealthy', timestamp: new Date().toISOString() });
+    }
   });
   app.use('/api/scans', scanRoutes);
-  app.use('/api/auth', authRoutes);
+  app.use('/api/inspection/auth', authRoutes);
   app.use('/api/admin', adminRoutes);
-  app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
   app.use('/api', (_req, res) => res.status(404).json({ success: false, message: 'Endpoint tidak ditemukan.' }));
   app.use((error, _req, res, _next) => {
     console.error(error);

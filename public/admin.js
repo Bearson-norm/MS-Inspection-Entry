@@ -23,7 +23,7 @@
 
   async function init(){
     try {
-      const session=await api('/api/auth/session'); showDashboard(session.username);
+      const session=await api('/api/inspection/auth/session'); showDashboard(session.username);
       const today=await api('/api/admin/today'); document.querySelector('#businessDate').textContent=today.business_date;
       const end=new Date(); if(end.getHours()<6) end.setDate(end.getDate()-1);
       const start=new Date(end);start.setDate(start.getDate()-6);
@@ -58,10 +58,10 @@
   }
   document.querySelector('#loginForm').addEventListener('submit',async(event)=>{
     event.preventDefault();const errorEl=document.querySelector('#loginError');errorEl.hidden=true;const button=event.submitter;button.disabled=true;
-    try {const result=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:document.querySelector('#username').value.trim(),password:document.querySelector('#password').value})});showDashboard(result.username);await init();}
+    try {const result=await api('/api/inspection/auth/login',{method:'POST',body:JSON.stringify({username:document.querySelector('#username').value.trim(),password:document.querySelector('#password').value})});showDashboard(result.username);await init();}
     catch(error){errorEl.textContent=error.message;errorEl.hidden=false;}finally{button.disabled=false;}
   });
-  document.querySelector('#logoutButton').addEventListener('click',async()=>{try{await api('/api/auth/logout',{method:'POST'});}finally{showLogin();}});
+  document.querySelector('#logoutButton').addEventListener('click',async()=>{try{await api('/api/inspection/auth/logout',{method:'POST'});}finally{showLogin();}});
   document.querySelector('#reportFilters').addEventListener('submit',(event)=>{event.preventDefault();state.logsPage=1;loadReports();});
   document.querySelector('#exportButton').addEventListener('click',()=>{window.location.href=`/api/admin/reports/export?${reportParams()}`;});
   document.querySelector('#logsPrev').addEventListener('click',()=>{if(state.logsPage>1){state.logsPage--;loadReports();}});document.querySelector('#logsNext').addEventListener('click',()=>{if(state.logsPage*state.limit<state.logsTotal){state.logsPage++;loadReports();}});

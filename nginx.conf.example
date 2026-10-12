@@ -1,3 +1,5 @@
+# Standalone Inspection (tanpa CRS). Untuk gabungan CRS + Inspection lihat nginx.crs-combined.conf.example
+
 server {
     listen 80;
     server_name inspection.example.local;
