@@ -1,6 +1,6 @@
 const { getBusinessDate, isYmd, addDays } = require('../utils/business-date');
 
-const RESULT_CODES = new Set(['GREEN', 'RED', 'EMPLOYEE_NOT_FOUND', 'EMPLOYEE_INACTIVE', 'INVALID_QR']);
+const RESULT_CODES = new Set(['GREEN', 'RED', 'PASS', 'EMPLOYEE_NOT_FOUND', 'EMPLOYEE_INACTIVE', 'INVALID_QR']);
 
 function parseFilters(query = {}) {
   const endDate = query.end_date || getBusinessDate();
@@ -25,7 +25,10 @@ function buildLogWhere(filters) {
   const clauses = ['l.business_date BETWEEN $1 AND $2'];
   const add = (sql, value) => { values.push(value); clauses.push(sql.replace('?', `$${values.length}`)); };
   if (filters.level) add('l.inspection_level = ?', filters.level);
-  if (filters.resultCode) add('l.result_code = ?', filters.resultCode);
+  if (filters.resultCode === 'PASS') {
+    clauses.push(`l.result_code IN ($${values.length + 1}, $${values.length + 2})`);
+    values.push('GREEN', 'RED');
+  } else if (filters.resultCode) add('l.result_code = ?', filters.resultCode);
   if (filters.department) add('e.department = ?', filters.department);
   if (filters.employeeId) add('l.employee_id ILIKE ?', `%${filters.employeeId}%`);
   if (filters.search) {

@@ -3,6 +3,7 @@ const ExcelJS = require('exceljs');
 const { pool } = require('../database');
 const { requireAdmin, requireSameOrigin } = require('../middleware/auth');
 const { parseFilters, buildLogWhere, clampPage, clampLimit } = require('../services/report-query');
+const { formatResultDisplay } = require('../utils/result-label');
 const { getBusinessDate } = require('../utils/business-date');
 
 const router = express.Router();
@@ -109,7 +110,7 @@ router.get('/reports/export', async (req, res, next) => {
       scanTime: new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'short', timeStyle: 'medium' }).format(new Date(row.scanned_at)),
       businessDate: row.business_date instanceof Date ? row.business_date.toLocaleDateString('en-CA') : String(row.business_date).slice(0, 10),
       employeeId: row.employee_id || '-', name: row.name || '-', department: row.department || '-',
-      level: row.inspection_level || '-', result: row.result_code, source: row.source, scannedValue: row.scanned_value
+      level: row.inspection_level || '-', result: formatResultDisplay(row.result_code), source: row.source, scannedValue: row.scanned_value
     }));
     sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
     sheet.getRow(1).fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF176B46' } };

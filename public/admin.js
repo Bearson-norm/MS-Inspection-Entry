@@ -1,4 +1,5 @@
 (() => {
+  const formatResult = (code) => (code === 'GREEN' || code === 'RED' ? 'PASS' : (code || '-'));
   const loginView = document.querySelector('#loginView');
   const dashboardView = document.querySelector('#dashboardView');
   const toast = document.querySelector('#toast');
@@ -41,7 +42,7 @@
       const [summary,logs]=await Promise.all([api(`/api/admin/reports/summary?${params}`),api(`/api/admin/reports/logs?${params}`)]);
       document.querySelector('#metricTotal').textContent=summary.data.total;document.querySelector('#metricGreen').textContent=summary.data.green;document.querySelector('#metricRed').textContent=summary.data.red;document.querySelector('#metricErrors').textContent=summary.data.errors;
       state.logsTotal=logs.pagination.total; const body=document.querySelector('#logsBody');body.innerHTML='';
-      logs.data.forEach((row)=>body.insertAdjacentHTML('beforeend',`<tr><td class="text-nowrap">${escapeHtml(formatTime(row.scanned_at))}</td><td><strong>${escapeHtml(row.employee_id||'-')}</strong><br><span class="text-secondary small">${escapeHtml(row.name||row.scanned_value)}</span></td><td>${escapeHtml(row.department||'-')}</td><td>${levelBadge(row.inspection_level)}</td><td><span class="badge-level badge-neutral">${escapeHtml(row.result_code)}</span></td><td>${escapeHtml(row.source)}</td></tr>`));
+      logs.data.forEach((row)=>body.insertAdjacentHTML('beforeend',`<tr><td class="text-nowrap">${escapeHtml(formatTime(row.scanned_at))}</td><td><strong>${escapeHtml(row.employee_id||'-')}</strong><br><span class="text-secondary small">${escapeHtml(row.name||row.scanned_value)}</span></td><td>${escapeHtml(row.department||'-')}</td><td>${levelBadge(row.inspection_level)}</td><td><span class="badge-level badge-neutral">${escapeHtml(formatResult(row.result_code))}</span></td><td>${escapeHtml(row.source)}</td></tr>`));
       document.querySelector('#logsEmpty').hidden=logs.data.length>0;document.querySelector('#logsPage').textContent=pageText(state.logsPage,state.logsTotal);
       document.querySelector('#logsPrev').disabled=state.logsPage<=1;document.querySelector('#logsNext').disabled=state.logsPage*state.limit>=state.logsTotal;
     } catch(error){showError('#reportAlert',error);}

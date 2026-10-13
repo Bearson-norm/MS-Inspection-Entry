@@ -13,3 +13,9 @@ test('report rejects reversed and oversized ranges', () => {
 test('pagination is constrained', () => {
   assert.equal(clampPage('-2'),1);assert.equal(clampPage('3'),3);assert.equal(clampLimit('999'),25);assert.equal(clampLimit('50'),50);
 });
+test('PASS result filter matches GREEN and RED scans', () => {
+  const filters = parseFilters({ start_date: '2026-10-01', end_date: '2026-10-08', result_code: 'PASS' });
+  const built = buildLogWhere(filters);
+  assert.match(built.where, /l\.result_code IN \(\$3, \$4\)/);
+  assert.deepEqual(built.values.slice(2), ['GREEN', 'RED']);
+});
