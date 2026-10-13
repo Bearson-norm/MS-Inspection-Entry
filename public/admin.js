@@ -6,7 +6,6 @@
   const state = { logsPage:1, logsTotal:0, employeesPage:1, employeesTotal:0, limit:25 };
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
   const formatTime = (value) => new Intl.DateTimeFormat('id-ID',{ timeZone:'Asia/Jakarta', dateStyle:'medium', timeStyle:'medium' }).format(new Date(value));
-  const ymd = (date) => { const local = new Date(date.getTime() - date.getTimezoneOffset()*60000); return local.toISOString().slice(0,10); };
   async function api(url, options={}) {
     const response = await fetch(url, { credentials:'same-origin', ...options, headers:{ ...(options.body ? {'Content-Type':'application/json'} : {}), ...(options.headers||{}) } });
     const data = await response.json().catch(() => ({ success:false, message:'Respons server tidak valid.' }));
@@ -25,10 +24,10 @@
   async function init(){
     try {
       const session=await api('/api/inspection/auth/session'); showDashboard(session.username);
-      const today=await api('/api/admin/today'); document.querySelector('#businessDate').textContent=today.business_date;
-      const end=new Date(); if(end.getHours()<6) end.setDate(end.getDate()-1);
-      const start=new Date(end);start.setDate(start.getDate()-6);
-      document.querySelector('#startDate').value=ymd(start);document.querySelector('#endDate').value=ymd(end);
+      const today=await api('/api/admin/today');
+      document.querySelector('#businessDate').textContent=today.business_date;
+      document.querySelector('#startDate').value=today.business_date;
+      document.querySelector('#endDate').value=today.business_date;
       await Promise.all([loadDepartments(),loadReports(),loadEmployees()]);
     } catch (_) { showLogin(); }
   }
