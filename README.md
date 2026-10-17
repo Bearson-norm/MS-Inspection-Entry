@@ -51,6 +51,17 @@ Sesuaikan kredensial database (`DB_PORT` default **5433**, selaras dengan CRS) d
 
 Migrasi bersifat idempotent dan tidak mengubah tabel existing.
 
+### Bulk level per departemen
+
+Set semua karyawan satu departemen ke level red/green (upsert `inspection_employee_levels`):
+
+```powershell
+npm run set-department-level -- --dry-run
+npm run set-department-level -- --department Production --level red
+```
+
+Opsi env: `DEPARTMENT`, `LEVEL`, `UPDATED_BY`. Cocokkan departemen case-insensitive (`Production` = `production`).
+
 ## API
 
 - `POST /api/scans` dengan body `{ "value": "EMP001", "source": "camera" }`.
