@@ -42,11 +42,11 @@
       <section aria-labelledby="summaryTitle">
         <h2 id="summaryTitle" class="visually-hidden">Ringkasan</h2>
         <p class="text-secondary small mb-2">Ringkasan dan log mengikuti filter tanggal (default: hari operasional ini).</p>
-        <div class="metrics-grid mb-4">
-          <article><span>Total scan</span><strong id="metricTotal">0</strong></article>
-          <article><span>Green</span><strong id="metricGreen">0</strong></article>
-          <article><span>Red</span><strong id="metricRed">0</strong></article>
-          <article><span>Invalid atau ditolak</span><strong id="metricErrors">0</strong></article>
+        <div class="metrics-grid mb-4" id="metricsGrid" aria-live="polite">
+          <article class="metric-card" data-metric="total"><span>Total scan</span><strong id="metricTotal">0</strong></article>
+          <article class="metric-card metric-card--green" data-metric="green"><span>Green</span><strong id="metricGreen">0</strong></article>
+          <article class="metric-card metric-card--red" data-metric="red"><span>Red</span><strong id="metricRed">0</strong></article>
+          <article class="metric-card" data-metric="errors"><span>Invalid atau ditolak</span><strong id="metricErrors">0</strong></article>
         </div>
       </section>
 
