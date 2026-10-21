@@ -8,11 +8,14 @@ const adminRoutes = require('./routes/admin');
 
 const publicDir = path.join(__dirname, 'public');
 const bootstrapDir = path.join(__dirname, 'node_modules', 'bootstrap', 'dist');
+const jsqrDir = path.join(__dirname, 'node_modules', 'jsqr', 'dist');
 
 function mountUi(app, mountPath) {
   const prefix = mountPath || '';
   const vendorPath = prefix ? `${prefix}/vendor/bootstrap` : '/vendor/bootstrap';
+  const jsqrVendorPath = prefix ? `${prefix}/vendor/jsqr` : '/vendor/jsqr';
   app.use(vendorPath, express.static(bootstrapDir));
+  app.use(jsqrVendorPath, express.static(jsqrDir));
   if (prefix) {
     app.use(prefix, express.static(publicDir));
     app.get(prefix, (_req, res) => res.redirect(301, `${prefix}/`));

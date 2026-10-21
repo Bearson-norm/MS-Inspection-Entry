@@ -7,6 +7,8 @@ Dapat di-deploy bersama CRS (`IoT-QR-Consumer`) di satu domain, misalnya `https:
 ## Fitur
 
 - Scanner kamera live dengan input manual sebagai fallback.
+- Pemindaian QR memakai **Barcode Detection API** bila browser mendukung (umumnya Chrome/Android); fallback **jsQR** dari frame kamera untuk Safari/iOS dan browser tanpa API native.
+- HTTPS wajib di production agar kamera berfungsi (termasuk iPhone/iPad); semua browser di iOS memakai WebKit.
 - Respons green selama 1 detik dan red selama 2 detik.
 - Parsing employee ID biasa, JSON, dan URL.
 - Pencatatan semua percobaan dengan hari operasional berganti pukul 06:00 WIB.
