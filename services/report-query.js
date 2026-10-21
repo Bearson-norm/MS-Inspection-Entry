@@ -15,6 +15,7 @@ function parseFilters(query = {}) {
   return {
     startDate, endDate, level, resultCode,
     department: String(query.department || '').trim().slice(0, 255),
+    checkpointLocation: String(query.checkpoint_location || '').trim().slice(0, 255),
     employeeId: String(query.employee_id || '').trim().slice(0, 255),
     search: String(query.search || '').trim().slice(0, 255)
   };
@@ -30,6 +31,7 @@ function buildLogWhere(filters) {
     values.push('GREEN', 'RED');
   } else if (filters.resultCode) add('l.result_code = ?', filters.resultCode);
   if (filters.department) add('e.department = ?', filters.department);
+  if (filters.checkpointLocation) add('l.checkpoint_location = ?', filters.checkpointLocation);
   if (filters.employeeId) add('l.employee_id ILIKE ?', `%${filters.employeeId}%`);
   if (filters.search) {
     values.push(`%${filters.search}%`);

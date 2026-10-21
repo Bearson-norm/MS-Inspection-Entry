@@ -41,6 +41,20 @@ function createApp() {
 
   mountUi(app, config.basePath);
 
+  app.get('/api/inspection/scanner-config', async (_req, res, next) => {
+    try {
+      const { listActiveCheckpointNames } = require('./services/checkpoints');
+      const checkpoints = await listActiveCheckpointNames(pool);
+      res.json({
+        success: true,
+        checkpoint_location: config.checkpointLocation,
+        checkpoints,
+        selection_required: checkpoints.length > 1
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
   app.get('/api/inspection/health', async (_req, res) => {
     try {
       await pool.query('SELECT 1');

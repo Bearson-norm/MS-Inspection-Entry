@@ -13,7 +13,8 @@ Dapat di-deploy bersama CRS (`IoT-QR-Consumer`) di satu domain, misalnya `https:
 - Parsing employee ID biasa, JSON, dan URL.
 - Pencatatan semua percobaan dengan hari operasional berganti pukul 06:00 WIB.
 - Login admin memakai akun `users` yang sudah ada.
-- Pengaturan level green/red, laporan terfilter, pagination, dan ekspor Excel.
+- Pengaturan level green/red, lokasi karyawan, laporan terfilter (termasuk lokasi checkpoint), pagination, dan ekspor Excel.
+- Lokasi scan: daftar dikelola admin (tab **Lokasi scan**); security memilih di halaman scanner. Env `CHECKPOINT_LOCATION` dipakai sebagai fallback jika daftar masih kosong, dan untuk mengisi lokasi pertama saat migrasi.
 - Health check database pada `GET /api/inspection/health`.
 
 ## Persyaratan
@@ -39,7 +40,7 @@ Dengan `BASE_PATH=/inspection` (default di `.env.example`):
 
 Untuk development tanpa prefix, kosongkan `BASE_PATH` di `.env` lalu buka `http://localhost:3100/` dan `/admin`.
 
-Sesuaikan kredensial database (`DB_PORT` default **5433**, selaras dengan CRS) dan `APP_ORIGIN`. Pada production di domain CRS, set:
+Sesuaikan kredensial database (`DB_PORT` default **5433**, selaras dengan CRS), `APP_ORIGIN`, dan `CHECKPOINT_LOCATION` (satu nilai per perangkat/gate). Pada production di domain CRS, set:
 
 - `APP_ORIGIN=https://crs.moof-set.web.id`
 - `BASE_PATH=/inspection`
@@ -51,7 +52,7 @@ Sesuaikan kredensial database (`DB_PORT` default **5433**, selaras dengan CRS) d
 - `inspection_scan_logs`: snapshot hasil setiap scan, level saat scan, sumber, timestamp, dan business date.
 - `inspection_admin_sessions`: hash token session admin dengan masa kedaluwarsa.
 
-Migrasi bersifat idempotent dan tidak mengubah tabel existing.
+Migrasi bersifat idempotent. Kolom `employee_data.location` ditambahkan pada database shared (default `Belum diisi`); log scan menyimpan snapshot `checkpoint_location`.
 
 ### Bulk level per departemen
 
@@ -66,10 +67,12 @@ Opsi env: `DEPARTMENT`, `LEVEL`, `UPDATED_BY`. Cocokkan departemen case-insensit
 
 ## API
 
-- `POST /api/scans` dengan body `{ "value": "EMP001", "source": "camera" }`.
+- `POST /api/scans` dengan body `{ "value": "EMP001", "source": "camera" }` — respons menyertakan `employee.location` dan `checkpoint_location`.
+- `GET /api/inspection/scanner-config` — daftar lokasi aktif untuk dropdown scanner.
 - `POST /api/inspection/auth/login`, `POST /api/inspection/auth/logout`, `GET /api/inspection/auth/session`.
-- `GET /api/admin/employees` dan `PATCH /api/admin/employees/:employeeId/level`.
-- `GET /api/admin/reports/summary`, `/logs`, `/departments`, dan `/export`.
+- `GET /api/admin/employees`, `PATCH /api/admin/employees/:employeeId/level`, dan `PATCH /api/admin/employees/:employeeId/location`.
+- `GET/POST /api/admin/checkpoints` dan `PATCH /api/admin/checkpoints/:id` — kelola lokasi scan.
+- `GET /api/admin/reports/summary`, `/logs`, `/departments`, `/checkpoints`, dan `/export`.
 - `GET /api/inspection/health` — health Inspection (CRS memakai `GET /api/health` sendiri).
 
 Endpoint `/api/admin/*` membutuhkan cookie session admin (`Path` mengikuti `BASE_PATH`, default `/inspection`). Auth Inspection sengaja di prefix `/api/inspection/auth` agar tidak bentrok dengan `POST /api/auth/login` CRS.

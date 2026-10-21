@@ -23,6 +23,13 @@
     </section>
 
     <section class="scanner-panel" aria-label="Pemindai QR">
+      <div id="checkpointField" class="mb-3" hidden>
+        <label class="form-label" for="checkpointSelect">Lokasi scan</label>
+        <select id="checkpointSelect" class="form-select form-select-lg">
+          <option value="">— Pilih lokasi —</option>
+        </select>
+        <p id="checkpointHint" class="form-text text-secondary mb-0">Pilih gate atau area sebelum memindai.</p>
+      </div>
       <div id="cameraStage" class="camera-stage">
         <video id="cameraVideo" playsinline muted aria-label="Tampilan kamera pemindai QR"></video>
         <div class="scan-frame" aria-hidden="true"><span></span><span></span><span></span><span></span></div>

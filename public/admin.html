@@ -53,6 +53,7 @@
       <ul class="nav nav-tabs mb-4" role="tablist">
         <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#logsPane" type="button">Log inspection</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#employeesPane" type="button">Level karyawan</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#checkpointsPane" type="button">Lokasi scan</button></li>
       </ul>
       <div class="tab-content">
         <section id="logsPane" class="tab-pane fade show active" tabindex="0">
@@ -62,19 +63,30 @@
             <div><label class="form-label" for="reportLevel">Level</label><select id="reportLevel" name="level" class="form-select"><option value="">Semua</option><option value="green">Green</option><option value="red">Red</option></select></div>
             <div><label class="form-label" for="resultCode">Hasil</label><select id="resultCode" name="result_code" class="form-select"><option value="">Semua</option><option value="PASS">PASS (scan OK)</option><option>EMPLOYEE_NOT_FOUND</option><option>EMPLOYEE_INACTIVE</option><option>INVALID_QR</option></select></div>
             <div><label class="form-label" for="department">Departemen</label><select id="department" name="department" class="form-select"><option value="">Semua</option></select></div>
+            <div><label class="form-label" for="checkpoint">Lokasi checkpoint</label><select id="checkpoint" name="checkpoint_location" class="form-select"><option value="">Semua</option></select></div>
             <div><label class="form-label" for="employeeFilter">Employee ID</label><input id="employeeFilter" name="employee_id" class="form-control" autocomplete="off"></div>
             <div class="filter-actions"><button class="btn btn-primary" type="submit">Terapkan</button><button id="exportButton" class="btn btn-outline-secondary" type="button">Unduh Excel</button></div>
           </form>
           <div id="reportAlert" class="alert alert-danger" hidden></div>
-          <div class="table-responsive data-surface"><table class="table table-hover align-middle mb-0"><thead><tr><th>Waktu</th><th>Karyawan</th><th>Departemen</th><th>Level</th><th>Hasil</th><th>Sumber</th></tr></thead><tbody id="logsBody"></tbody></table><p id="logsEmpty" class="empty-state" hidden>Belum ada log untuk filter ini.</p></div>
+          <div class="table-responsive data-surface"><table class="table table-hover align-middle mb-0"><thead><tr><th>Waktu</th><th>Karyawan</th><th>Departemen</th><th>Lokasi karyawan</th><th>Lokasi checkpoint</th><th>Level</th><th>Hasil</th><th>Sumber</th></tr></thead><tbody id="logsBody"></tbody></table><p id="logsEmpty" class="empty-state" hidden>Belum ada log untuk filter ini.</p></div>
           <nav class="pager mt-3" aria-label="Pagination log"><button id="logsPrev" class="btn btn-outline-secondary btn-sm">Sebelumnya</button><span id="logsPage"></span><button id="logsNext" class="btn btn-outline-secondary btn-sm">Berikutnya</button></nav>
         </section>
 
         <section id="employeesPane" class="tab-pane fade" tabindex="0">
-          <form id="employeeFilters" class="d-flex flex-wrap gap-2 mb-3"><input id="employeeSearch" class="form-control search-control" placeholder="Cari ID, nama, atau departemen"><select id="employeeLevel" class="form-select level-control"><option value="">Semua level</option><option value="green">Green</option><option value="red">Red</option></select><button class="btn btn-primary">Cari</button></form>
+          <form id="employeeFilters" class="d-flex flex-wrap gap-2 mb-3"><input id="employeeSearch" class="form-control search-control" placeholder="Cari ID, nama, departemen, atau lokasi"><select id="employeeLevel" class="form-select level-control"><option value="">Semua level</option><option value="green">Green</option><option value="red">Red</option></select><button class="btn btn-primary">Cari</button></form>
           <div id="employeeAlert" class="alert alert-danger" hidden></div>
-          <div class="table-responsive data-surface"><table class="table table-hover align-middle mb-0"><thead><tr><th>Employee ID</th><th>Nama</th><th>Departemen</th><th>Status</th><th>Level inspection</th></tr></thead><tbody id="employeesBody"></tbody></table><p id="employeesEmpty" class="empty-state" hidden>Tidak ada karyawan yang cocok.</p></div>
+          <div class="table-responsive data-surface"><table class="table table-hover align-middle mb-0"><thead><tr><th>Employee ID</th><th>Nama</th><th>Departemen</th><th>Lokasi</th><th>Status</th><th>Level inspection</th></tr></thead><tbody id="employeesBody"></tbody></table><p id="employeesEmpty" class="empty-state" hidden>Tidak ada karyawan yang cocok.</p></div>
           <nav class="pager mt-3" aria-label="Pagination karyawan"><button id="employeesPrev" class="btn btn-outline-secondary btn-sm">Sebelumnya</button><span id="employeesPage"></span><button id="employeesNext" class="btn btn-outline-secondary btn-sm">Berikutnya</button></nav>
+        </section>
+
+        <section id="checkpointsPane" class="tab-pane fade" tabindex="0">
+          <form id="checkpointAddForm" class="row g-2 align-items-end mb-4">
+            <div class="col-md-6"><label class="form-label" for="checkpointName">Nama lokasi baru</label><input id="checkpointName" class="form-control" maxlength="255" placeholder="Contoh: Gate A - Lobby" required></div>
+            <div class="col-md-2"><label class="form-label" for="checkpointSort">Urutan</label><input id="checkpointSort" class="form-control" type="number" value="0" min="0" step="1"></div>
+            <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Tambah</button></div>
+          </form>
+          <div id="checkpointAlert" class="alert alert-danger" hidden></div>
+          <div class="table-responsive data-surface"><table class="table table-hover align-middle mb-0"><thead><tr><th>Nama</th><th>Urutan</th><th>Status</th><th>Aktif</th></tr></thead><tbody id="checkpointsBody"></tbody></table><p id="checkpointsEmpty" class="empty-state" hidden>Belum ada lokasi scan. Tambahkan lokasi agar security dapat memilih di halaman scanner.</p></div>
         </section>
       </div>
     </main>

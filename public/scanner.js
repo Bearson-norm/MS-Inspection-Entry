@@ -7,6 +7,9 @@
   const input = document.querySelector('#employeeInput');
   const manualButton = document.querySelector('#manualButton');
   const overlay = document.querySelector('#resultOverlay');
+  const checkpointField = document.querySelector('#checkpointField');
+  const checkpointSelect = document.querySelector('#checkpointSelect');
+  const CHECKPOINT_STORAGE_KEY = 'inspection_checkpoint_selection';
   const CANVAS_MAX_WIDTH = 640;
   const SCAN_INTERVAL_MS = 140;
 
@@ -19,6 +22,8 @@
   let processing = false;
   let lastValue = '';
   let lastAt = 0;
+  let activeCheckpoint = '';
+  let checkpointSelectionRequired = false;
 
   const setStatus = (message) => { cameraStatus.textContent = message; };
 
@@ -157,28 +162,89 @@
     document.querySelector('#resultTitle').textContent = data.code === 'GREEN' ? 'Silakan masuk' : data.code === 'RED' ? 'Periksa' : 'Coba kembali';
     document.querySelector('#resultMessage').textContent = data.message;
     const details = document.querySelector('#employeeDetails');
-    details.innerHTML = data.employee
-      ? `<div><dt>Employee ID</dt><dd>${escapeHtml(data.employee.employee_id)}</dd></div><div><dt>Nama</dt><dd>${escapeHtml(data.employee.name)}</dd></div><div><dt>Departemen</dt><dd>${escapeHtml(data.employee.department)}</dd></div>`
-      : '';
+    const checkpoint = data.checkpoint_location || activeCheckpoint || '-';
+    const rows = [];
+    if (data.employee) {
+      rows.push(`<div><dt>Employee ID</dt><dd>${escapeHtml(data.employee.employee_id)}</dd></div>`);
+      rows.push(`<div><dt>Nama</dt><dd>${escapeHtml(data.employee.name)}</dd></div>`);
+      rows.push(`<div><dt>Departemen</dt><dd>${escapeHtml(data.employee.department)}</dd></div>`);
+      rows.push(`<div><dt>Lokasi karyawan</dt><dd>${escapeHtml(data.employee.location || '-')}</dd></div>`);
+    }
+    rows.push(`<div><dt>Lokasi scan</dt><dd>${escapeHtml(checkpoint)}</dd></div>`);
+    details.innerHTML = rows.join('');
+  }
+
+  function getSelectedCheckpoint() {
+    if (checkpointField && !checkpointField.hidden && checkpointSelect) {
+      return checkpointSelect.value.trim();
+    }
+    return activeCheckpoint.trim();
+  }
+
+  function persistCheckpointSelection(value) {
+    if (!value) return;
+    try { sessionStorage.setItem(CHECKPOINT_STORAGE_KEY, value); } catch (_) {}
+  }
+
+  async function loadScannerConfig() {
+    try {
+      const response = await fetch('/api/inspection/scanner-config');
+      const data = await response.json();
+      activeCheckpoint = String(data.checkpoint_location || '').trim();
+      const checkpoints = Array.isArray(data.checkpoints) ? data.checkpoints : [];
+      checkpointSelectionRequired = Boolean(data.selection_required);
+
+      if (!checkpoints.length) {
+        if (checkpointField) checkpointField.hidden = true;
+        return;
+      }
+
+      checkpointField.hidden = false;
+      checkpointSelect.innerHTML = checkpoints.length > 1
+        ? '<option value="">— Pilih lokasi —</option>'
+        : '';
+      checkpoints.forEach((name) => {
+        checkpointSelect.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`);
+      });
+
+      let saved = '';
+      try { saved = sessionStorage.getItem(CHECKPOINT_STORAGE_KEY) || ''; } catch (_) {}
+      if (saved && checkpoints.includes(saved)) checkpointSelect.value = saved;
+      else if (checkpoints.length === 1) checkpointSelect.value = checkpoints[0];
+
+      activeCheckpoint = checkpointSelect.value || activeCheckpoint;
+      checkpointSelect.addEventListener('change', () => {
+        activeCheckpoint = checkpointSelect.value;
+        persistCheckpointSelection(activeCheckpoint);
+      });
+    } catch (_) {}
   }
 
   async function submitScan(value, source) {
     if (processing) return;
+    const checkpointLocation = getSelectedCheckpoint();
+    if (checkpointSelectionRequired && !checkpointLocation) {
+      setStatus('Pilih lokasi scan terlebih dahulu.');
+      checkpointSelect?.focus();
+      return;
+    }
     processing = true;
     manualButton.disabled = true;
     cameraButton.disabled = true;
     setStatus('Memproses scan...');
     let data;
     try {
+      const payload = { value, source };
+      if (checkpointLocation) payload.checkpoint_location = checkpointLocation;
       const response = await fetch('/api/scans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ value, source }),
+        body: JSON.stringify(payload),
       });
       data = await response.json();
       if (!data.code) throw new Error('INVALID_RESPONSE');
     } catch (_) {
-      data = { code: 'NETWORK_ERROR', message: 'Tidak dapat terhubung ke server.', display_ms: 2000 };
+      data = { code: 'NETWORK_ERROR', message: 'Tidak dapat terhubung ke server.', display_ms: 2000, checkpoint_location: activeCheckpoint };
     }
     showResult(data);
     await new Promise((resolve) => setTimeout(resolve, data.display_ms || 2000));
@@ -204,4 +270,5 @@
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopCamera(); });
   window.addEventListener('pagehide', stopCamera);
+  loadScannerConfig();
 })();

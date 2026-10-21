@@ -18,6 +18,12 @@ function normalizeBasePath(raw) {
 
 const basePath = normalizeBasePath(process.env.BASE_PATH);
 
+function stringEnv(name, fallback, maxLength = 255) {
+  const trimmed = String(process.env[name] || '').trim();
+  if (!trimmed) return fallback;
+  return trimmed.slice(0, maxLength);
+}
+
 module.exports = Object.freeze({
   port: intEnv('PORT', 3100, 1, 65535),
   host: process.env.HOST || '0.0.0.0',
@@ -30,6 +36,7 @@ module.exports = Object.freeze({
   adminUsername: process.env.ADMIN_USERNAME || 'admin',
   sessionTtlHours: intEnv('SESSION_TTL_HOURS', 8, 1, 168),
   scanValueMaxLength: intEnv('SCAN_VALUE_MAX_LENGTH', 2048, 32, 10000),
+  checkpointLocation: stringEnv('CHECKPOINT_LOCATION', 'Belum diatur', 255),
   secureCookies: nodeEnv === 'production',
   db: {
     host: process.env.DB_HOST || 'localhost',

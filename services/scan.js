@@ -9,11 +9,14 @@ const RESPONSES = Object.freeze({
   INVALID_QR: { success: false, message: 'QR tidak valid atau tidak berisi kode karyawan.', display_ms: 2000 }
 });
 
-function resultResponse(code, employee = null, level = null) {
-  return { ...RESPONSES[code], code, level, employee };
+function resultResponse(code, employee = null, level = null, checkpointLocation = 'Belum diatur') {
+  return { ...RESPONSES[code], code, level, employee, checkpoint_location: checkpointLocation };
 }
 
-async function processScan(db, input, now = new Date()) {
+async function processScan(db, input, now = new Date(), options = {}) {
+  const checkpointLocation = typeof options.checkpointLocation === 'string' && options.checkpointLocation.trim()
+    ? options.checkpointLocation.trim().slice(0, 255)
+    : 'Belum diatur';
   const source = input.source === 'camera' ? 'camera' : input.source === 'manual' ? 'manual' : null;
   const raw = typeof input.value === 'string' ? input.value.trim() : '';
   const employeeId = parseQrValue(input.value);
@@ -23,7 +26,8 @@ async function processScan(db, input, now = new Date()) {
 
   if (source && employeeId) {
     const found = await db.query(
-      `SELECT e.employee_id, e.name, e.department, COALESCE(e.is_active, true) AS is_active,
+      `SELECT e.employee_id, e.name, e.department, COALESCE(e.location, 'Belum diisi') AS location,
+              COALESCE(e.is_active, true) AS is_active,
               COALESCE(l.level, 'green') AS inspection_level
        FROM employee_data e
        LEFT JOIN inspection_employee_levels l ON l.employee_id = e.employee_id
@@ -40,14 +44,14 @@ async function processScan(db, input, now = new Date()) {
 
   await db.query(
     `INSERT INTO inspection_scan_logs
-       (employee_id, scanned_value, inspection_level, result_code, source, business_date, scanned_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [employee ? employee.employee_id : null, raw.slice(0, 2048), level, code, source || 'manual', getBusinessDate(now), now]
+       (employee_id, scanned_value, inspection_level, result_code, source, business_date, scanned_at, checkpoint_location)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [employee ? employee.employee_id : null, raw.slice(0, 2048), level, code, source || 'manual', getBusinessDate(now), now, checkpointLocation]
   );
 
   return resultResponse(code, employee ? {
-    employee_id: employee.employee_id, name: employee.name, department: employee.department
-  } : null, level);
+    employee_id: employee.employee_id, name: employee.name, department: employee.department, location: employee.location
+  } : null, level, checkpointLocation);
 }
 
 module.exports = { RESPONSES, resultResponse, processScan };

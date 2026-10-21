@@ -28,12 +28,24 @@
       document.querySelector('#businessDate').textContent=today.business_date;
       document.querySelector('#startDate').value=today.business_date;
       document.querySelector('#endDate').value=today.business_date;
-      await Promise.all([loadDepartments(),loadReports(),loadEmployees()]);
+      await Promise.all([loadDepartments(),loadReportCheckpoints(),loadReports(),loadEmployees(),loadCheckpointSettings()]);
     } catch (_) { showLogin(); }
   }
   async function loadDepartments(){
     const result=await api('/api/admin/reports/departments');const select=document.querySelector('#department');
     result.data.forEach((value)=>select.insertAdjacentHTML('beforeend',`<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`));
+  }
+  async function loadReportCheckpoints(){
+    const result=await api('/api/admin/reports/checkpoints');const select=document.querySelector('#checkpoint');
+    result.data.forEach((value)=>select.insertAdjacentHTML('beforeend',`<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`));
+  }
+  async function loadCheckpointSettings(){
+    clearError('#checkpointAlert');
+    try {
+      const result=await api('/api/admin/checkpoints');const body=document.querySelector('#checkpointsBody');body.innerHTML='';
+      result.data.forEach((row)=>body.insertAdjacentHTML('beforeend',`<tr><td><input class="form-control form-control-sm checkpoint-name-input" data-id="${row.id}" value="${escapeHtml(row.name)}" maxlength="255" aria-label="Nama lokasi ${escapeHtml(row.name)}"></td><td><input class="form-control form-control-sm checkpoint-sort-input" data-id="${row.id}" type="number" value="${row.sort_order}" min="0" step="1" aria-label="Urutan ${escapeHtml(row.name)}"></td><td>${row.is_active?'Aktif':'Nonaktif'}</td><td><input class="form-check-input checkpoint-active-input" data-id="${row.id}" type="checkbox" ${row.is_active?'checked':''} aria-label="Aktifkan ${escapeHtml(row.name)}"></td></tr>`));
+      document.querySelector('#checkpointsEmpty').hidden=result.data.length>0;
+    } catch(error){showError('#checkpointAlert',error);}
   }
   async function loadReports(){
     clearError('#reportAlert'); const params=reportParams(); params.set('page',state.logsPage);params.set('limit',state.limit);
@@ -41,7 +53,7 @@
       const [summary,logs]=await Promise.all([api(`/api/admin/reports/summary?${params}`),api(`/api/admin/reports/logs?${params}`)]);
       document.querySelector('#metricTotal').textContent=summary.data.total;document.querySelector('#metricGreen').textContent=summary.data.green;document.querySelector('#metricRed').textContent=summary.data.red;document.querySelector('#metricErrors').textContent=summary.data.errors;
       state.logsTotal=logs.pagination.total; const body=document.querySelector('#logsBody');body.innerHTML='';
-      logs.data.forEach((row)=>body.insertAdjacentHTML('beforeend',`<tr><td class="text-nowrap">${escapeHtml(formatTime(row.scanned_at))}</td><td><strong>${escapeHtml(row.employee_id||'-')}</strong><br><span class="text-secondary small">${escapeHtml(row.name||row.scanned_value)}</span></td><td>${escapeHtml(row.department||'-')}</td><td>${levelBadge(row.inspection_level)}</td><td><span class="badge-level badge-neutral">${escapeHtml(formatResult(row.result_code))}</span></td><td>${escapeHtml(row.source)}</td></tr>`));
+      logs.data.forEach((row)=>body.insertAdjacentHTML('beforeend',`<tr><td class="text-nowrap">${escapeHtml(formatTime(row.scanned_at))}</td><td><strong>${escapeHtml(row.employee_id||'-')}</strong><br><span class="text-secondary small">${escapeHtml(row.name||row.scanned_value)}</span></td><td>${escapeHtml(row.department||'-')}</td><td>${escapeHtml(row.employee_location||'-')}</td><td>${escapeHtml(row.checkpoint_location||'-')}</td><td>${levelBadge(row.inspection_level)}</td><td><span class="badge-level badge-neutral">${escapeHtml(formatResult(row.result_code))}</span></td><td>${escapeHtml(row.source)}</td></tr>`));
       document.querySelector('#logsEmpty').hidden=logs.data.length>0;document.querySelector('#logsPage').textContent=pageText(state.logsPage,state.logsTotal);
       document.querySelector('#logsPrev').disabled=state.logsPage<=1;document.querySelector('#logsNext').disabled=state.logsPage*state.limit>=state.logsTotal;
     } catch(error){showError('#reportAlert',error);}
@@ -51,7 +63,7 @@
     clearError('#employeeAlert');const params=new URLSearchParams({page:state.employeesPage,limit:state.limit});const search=document.querySelector('#employeeSearch').value.trim();const level=document.querySelector('#employeeLevel').value;if(search)params.set('search',search);if(level)params.set('level',level);
     try {
       const result=await api(`/api/admin/employees?${params}`);state.employeesTotal=result.pagination.total;const body=document.querySelector('#employeesBody');body.innerHTML='';
-      result.data.forEach((row)=>body.insertAdjacentHTML('beforeend',`<tr><td><strong>${escapeHtml(row.employee_id)}</strong></td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.department)}</td><td>${row.is_active?'Aktif':'Nonaktif'}</td><td><select class="form-select form-select-sm level-select" data-employee-id="${escapeHtml(row.employee_id)}" aria-label="Level inspection ${escapeHtml(row.name)}"><option value="green" ${row.level==='green'?'selected':''}>Green</option><option value="red" ${row.level==='red'?'selected':''}>Red</option></select></td></tr>`));
+      result.data.forEach((row)=>body.insertAdjacentHTML('beforeend',`<tr><td><strong>${escapeHtml(row.employee_id)}</strong></td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.department)}</td><td><input class="form-control form-control-sm location-input" type="text" maxlength="255" value="${escapeHtml(row.location||'')}" data-employee-id="${escapeHtml(row.employee_id)}" data-original="${escapeHtml(row.location||'')}" aria-label="Lokasi ${escapeHtml(row.name)}"></td><td>${row.is_active?'Aktif':'Nonaktif'}</td><td><select class="form-select form-select-sm level-select" data-employee-id="${escapeHtml(row.employee_id)}" aria-label="Level inspection ${escapeHtml(row.name)}"><option value="green" ${row.level==='green'?'selected':''}>Green</option><option value="red" ${row.level==='red'?'selected':''}>Red</option></select></td></tr>`));
       document.querySelector('#employeesEmpty').hidden=result.data.length>0;document.querySelector('#employeesPage').textContent=pageText(state.employeesPage,state.employeesTotal);
       document.querySelector('#employeesPrev').disabled=state.employeesPage<=1;document.querySelector('#employeesNext').disabled=state.employeesPage*state.limit>=state.employeesTotal;
     } catch(error){showError('#employeeAlert',error);}
@@ -72,6 +84,36 @@
     if(!confirm(`Ubah level ${employeeId} menjadi ${select.value.toUpperCase()}?`)){select.value=previous;return;}select.disabled=true;
     try{await api(`/api/admin/employees/${encodeURIComponent(employeeId)}/level`,{method:'PATCH',body:JSON.stringify({level:select.value})});notify(`Level ${employeeId} berhasil diperbarui.`);await loadReports();}
     catch(error){select.value=previous;showError('#employeeAlert',error);}finally{select.disabled=false;}
+  });
+  document.querySelector('#employeesBody').addEventListener('change',async(event)=>{
+    const input=event.target.closest('.location-input');if(!input)return;const employeeId=input.dataset.employeeId;const location=input.value.trim();const original=input.dataset.original||'';
+    if(!location){input.value=original;showError('#employeeAlert',new Error('Lokasi wajib diisi.'));return;}
+    if(location===original)return;input.disabled=true;
+    try{await api(`/api/admin/employees/${encodeURIComponent(employeeId)}/location`,{method:'PATCH',body:JSON.stringify({location})});input.dataset.original=location;notify(`Lokasi ${employeeId} berhasil diperbarui.`);}
+    catch(error){input.value=original;showError('#employeeAlert',error);}finally{input.disabled=false;}
+  });
+  document.querySelector('#checkpointAddForm').addEventListener('submit',async(event)=>{
+    event.preventDefault();clearError('#checkpointAlert');const name=document.querySelector('#checkpointName').value.trim();const sortOrder=document.querySelector('#checkpointSort').value;
+    try{await api('/api/admin/checkpoints',{method:'POST',body:JSON.stringify({name,sort_order:sortOrder})});document.querySelector('#checkpointName').value='';notify('Lokasi scan ditambahkan.');await loadCheckpointSettings();const filter=document.querySelector('#checkpoint');filter.innerHTML='<option value="">Semua</option>';await loadReportCheckpoints();}
+    catch(error){showError('#checkpointAlert',error);}
+  });
+  document.querySelector('#checkpointsBody').addEventListener('change',async(event)=>{
+    const target=event.target;const id=target.dataset.id;if(!id)return;
+    if(target.classList.contains('checkpoint-active-input')){
+      try{await api(`/api/admin/checkpoints/${id}`,{method:'PATCH',body:JSON.stringify({is_active:target.checked})});notify('Status lokasi diperbarui.');await loadCheckpointSettings();}
+      catch(error){showError('#checkpointAlert',error);await loadCheckpointSettings();}
+      return;
+    }
+    if(target.classList.contains('checkpoint-name-input')){
+      const name=target.value.trim();if(!name){showError('#checkpointAlert',new Error('Nama lokasi wajib diisi.'));return;}
+      try{await api(`/api/admin/checkpoints/${id}`,{method:'PATCH',body:JSON.stringify({name})});notify('Nama lokasi diperbarui.');}
+      catch(error){showError('#checkpointAlert',error);await loadCheckpointSettings();}
+      return;
+    }
+    if(target.classList.contains('checkpoint-sort-input')){
+      try{await api(`/api/admin/checkpoints/${id}`,{method:'PATCH',body:JSON.stringify({sort_order:target.value})});notify('Urutan lokasi diperbarui.');}
+      catch(error){showError('#checkpointAlert',error);await loadCheckpointSettings();}
+    }
   });
   init();
 })();

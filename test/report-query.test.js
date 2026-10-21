@@ -19,3 +19,9 @@ test('PASS result filter matches GREEN and RED scans', () => {
   assert.match(built.where, /l\.result_code IN \(\$3, \$4\)/);
   assert.deepEqual(built.values.slice(2), ['GREEN', 'RED']);
 });
+test('checkpoint filter is parameterized', () => {
+  const filters = parseFilters({ start_date: '2026-10-01', end_date: '2026-10-08', checkpoint_location: 'Gate A' });
+  const built = buildLogWhere(filters);
+  assert.match(built.where, /l\.checkpoint_location = \$3/);
+  assert.equal(built.values[2], 'Gate A');
+});
