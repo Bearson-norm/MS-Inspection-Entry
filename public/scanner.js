@@ -181,9 +181,17 @@
     return activeCheckpoint.trim();
   }
 
+  function readSavedCheckpoint() {
+    try {
+      return localStorage.getItem(CHECKPOINT_STORAGE_KEY) || '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   function persistCheckpointSelection(value) {
     if (!value) return;
-    try { sessionStorage.setItem(CHECKPOINT_STORAGE_KEY, value); } catch (_) {}
+    try { localStorage.setItem(CHECKPOINT_STORAGE_KEY, value); } catch (_) {}
   }
 
   async function loadScannerConfig() {
@@ -207,12 +215,12 @@
         checkpointSelect.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`);
       });
 
-      let saved = '';
-      try { saved = sessionStorage.getItem(CHECKPOINT_STORAGE_KEY) || ''; } catch (_) {}
+      const saved = readSavedCheckpoint();
       if (saved && checkpoints.includes(saved)) checkpointSelect.value = saved;
       else if (checkpoints.length === 1) checkpointSelect.value = checkpoints[0];
 
       activeCheckpoint = checkpointSelect.value || activeCheckpoint;
+      if (activeCheckpoint) persistCheckpointSelection(activeCheckpoint);
       checkpointSelect.addEventListener('change', () => {
         activeCheckpoint = checkpointSelect.value;
         persistCheckpointSelection(activeCheckpoint);
