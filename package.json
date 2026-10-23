@@ -4,14 +4,16 @@
   "description": "Employee QR inspection screening service",
   "main": "server.js",
   "scripts": {
+    "prestart": "node scripts/verify-node-runtime.js",
     "start": "node server.js",
     "dev": "node --watch server.js",
     "test": "node --test",
     "migrate": "node scripts/migrate.js",
-    "set-department-level": "node scripts/set-department-level.js"
+    "set-department-level": "node scripts/set-department-level.js",
+    "verify-node": "node scripts/verify-node-runtime.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.23.4"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

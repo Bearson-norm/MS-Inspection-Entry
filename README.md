@@ -19,7 +19,7 @@ Dapat di-deploy bersama CRS (`IoT-QR-Consumer`) di satu domain, misalnya `https:
 
 ## Persyaratan
 
-- Node.js 18 atau lebih baru.
+- Node.js **22.23.4 LTS** atau lebih baru (patch keamanan Okt 2026; jalankan `npm run verify-node`).
 - PostgreSQL milik `IoT-QR-Consumer` sudah aktif dan memiliki tabel `employee_data` serta `users`.
 - HTTPS diperlukan agar kamera browser dapat digunakan selain pada `localhost`.
 
@@ -79,14 +79,15 @@ Endpoint `/api/admin/*` membutuhkan cookie session admin (`Path` mengikuti `BASE
 
 ## Deployment
 
+0. Pada server production, pastikan runtime Node sudah dipatch: `bash scripts/production-node-check.sh` atau `node -v` lalu `npm run verify-node` (minimum **22.23.4** untuk line 22.x). Setelah upgrade Node, `pm2 restart ms-inspection-entry` (dan proses CRS jika memakai Node).
 1. Jalankan `npm install --omit=dev` dan `npm run migrate` pada server (PostgreSQL CRS harus sudah jalan).
 2. Isi `.env` production (origin HTTPS, `BASE_PATH`, DB).
 3. Jalankan `pm2 start ecosystem.config.js --env production` (port **3100**).
 4. CRS tetap di PM2 terpisah (port production CRS, mis. **5567**).
 5. Pasang Nginx gabungan: lihat [`nginx.crs-combined.conf.example`](nginx.crs-combined.conf.example). Standalone Inspection: [`nginx.conf.example`](nginx.conf.example).
-6. Verifikasi:
+6. Verifikasi (setelah upgrade Node dan `pm2 restart`):
    - `GET /api/health` → CRS
    - `GET /api/inspection/health` → Inspection + DB
-   - UI `/inspection/`, admin, scan green/red, ekspor Excel
+   - UI `/inspection/`, `/inspection/admin`, scan green/red, ekspor Excel
 
 Session cookie menggunakan `HttpOnly`, `SameSite=Strict`, dan `Secure` pada production. Operasi mutasi admin juga memeriksa header origin.
